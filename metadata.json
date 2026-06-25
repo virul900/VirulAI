@@ -1,0 +1,13 @@
+{
+  "name": "Remix: Virul",
+  "description": "Virul ai .New topic .New focus",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "Multimodal Chat",
+    "Video Analysis",
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

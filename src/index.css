@@ -1,0 +1,90 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@theme {
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-calibri: "Calibri", "Candara", "Segoe UI", sans-serif;
+}
+
+@layer base {
+  html, body, #root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    overscroll-behavior-x: none !important;
+    overscroll-behavior-y: none !important;
+    touch-action: none;
+  }
+
+  body {
+    @apply antialiased text-slate-900 bg-white font-sans;
+  }
+
+  /* Make sure scrollable containers capture local touch actions, have native velocity, and do not bubble up */
+  .overflow-y-auto, .overflow-auto {
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@layer components {
+  .chat-content {
+    @apply leading-relaxed;
+  }
+  
+  .chat-content p {
+    @apply mb-3 last:mb-0;
+  }
+
+  .chat-content ul, .chat-content ol {
+    @apply mb-3 ml-6 list-outside;
+  }
+
+  .chat-content ul {
+    @apply list-disc;
+  }
+
+  .chat-content ol {
+    @apply list-decimal;
+  }
+
+  .chat-content li {
+    @apply mb-1;
+  }
+
+  .chat-content code {
+    @apply bg-blue-100/50 px-1.5 py-0.5 rounded text-sm font-medium text-blue-700;
+  }
+
+  .chat-content pre {
+    @apply bg-blue-50/50 rounded-xl p-4 overflow-x-auto my-4 text-sm;
+  }
+
+  .chat-content pre code {
+    @apply bg-transparent p-0 text-slate-800 font-normal;
+  }
+
+  .chat-content h1, .chat-content h2, .chat-content h3 {
+    @apply font-semibold mt-4 mb-2;
+  }
+
+  .chat-content h1 { @apply text-xl; }
+  .chat-content h2 { @apply text-lg; }
+  .chat-content h3 { @apply text-base; }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

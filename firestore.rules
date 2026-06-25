@@ -1,0 +1,96 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net (Strict Default-Deny-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- PRIMITIVE DEFINITIONS & GLOBAL HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- RESOURCE VALIDATION BLUEPRINTS ---
+    function isValidChat(chat) {
+      return chat.id is string && chat.id.size() <= 128 && chat.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && chat.title is string && chat.title.size() <= 200
+        && chat.pinned is bool
+        && chat.userId is string && chat.userId.size() <= 128 && chat.userId.matches('^[a-zA-Z0-9_\\-]+$')
+        && chat.messages is list && chat.messages.size() <= 500
+        && chat.updatedAt is int;
+    }
+
+    // --- EXPLICIT RESOURCE ACTIONS ---
+    function isRenameAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['title', 'updatedAt']);
+    }
+
+    function isPinToggleAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['pinned', 'updatedAt']);
+    }
+
+    function isSendMessageAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['messages', 'updatedAt']);
+    }
+
+    function isInitChatAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['title', 'messages', 'updatedAt']);
+    }
+
+    function isFullUpdateAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['title', 'messages', 'pinned', 'updatedAt']);
+    }
+
+    // --- COLLECTION PATH MATCHES ---
+    match /chats/{chatId} {
+      allow read: if isSignedIn() 
+        && isValidId(chatId) 
+        && existing().userId == request.auth.uid;
+
+      allow create: if isEmailVerified()
+        && isValidId(chatId)
+        && isValidChat(incoming())
+        && incoming().id == chatId
+        && incoming().userId == request.auth.uid
+        && incoming().updatedAt == request.time.toMillis();
+
+      allow update: if isEmailVerified()
+        && isValidId(chatId)
+        && existing().userId == request.auth.uid
+        && incoming().userId == existing().userId
+        && incoming().id == existing().id
+        && isValidChat(incoming())
+        && incoming().updatedAt == request.time.toMillis()
+        && (
+          isRenameAction() ||
+          isPinToggleAction() ||
+          isSendMessageAction() ||
+          isInitChatAction() ||
+          isFullUpdateAction()
+        );
+
+      allow delete: if isSignedIn()
+        && isValidId(chatId)
+        && existing().userId == request.auth.uid;
+    }
+  }
+}
